@@ -1,0 +1,401 @@
+# 3D sample: (truncated) pyramid InGaAs quantum dot
+
+#Begin NextnanoWizard parameter section
+$W = 20    # width of pyramid (nm)
+$HEIGHT_CAPPING = 6    # height of pyramid (nm) (<= WIDTH/2)
+$HEIGHT_SK = 2.4  # height of SK QD (nm)
+$HEIGHT_GaAs = 3 # height of GaAs layer
+$HEIGHT_AlGaAs = 2 # width of AlGaAs layer
+$HEIGHT_InGaAs = 3 # bottom well thickness
+$WIDTH_SK = 12 # width of SML QD 
+$WETTING = 0.5 # wetting layer thickness (nm)
+$ALLOY = 1.0   # In content of InGaAs quantum dot
+$XYGRID = 0.55  # in-plane grid spacing (nm)
+$ZGRID = 0.35  # vertical grid spacing (nm)
+$QDZGRID = 0.35
+$NUME = 4      # number of electron states
+$NUMH = 4      # number of hole states
+#$KP6 = 0       # use either 6-band k.p model for holes (1) or 1-band effective mass model (0) 
+#$KP8 = 0       # use either 8-band k.p model for electrons and holes (1) or 1-band effective mass model (0)
+$AVS = 1       # 2D output in AVS (1) or Origin (0) format
+#End NextnanoWizard parameter section
+
+# fixed parameters
+$DIST = 20     # thickness of surrounding GaAs region (nm)
+$BARRIER = 3   # expansion of quantum region into barriers (nm)
+
+$InGaAs_In = 0.15
+
+# derived parameters
+#$ELEC1 = 1-$KP8
+#$HOLE1 = (1-$KP8)*(1-$KP6)
+$ORIGIN = 1-$AVS
+
+
+global{ 
+   simulate3D{}
+   temperature  = 20
+   substrate{ name = "GaAs" }
+periodic{ x = yes y = yes z=no}
+   crystal_zb{ x_hkl = [1, 0, 0] y_hkl = [0, 1, 0] } # defines orientation of simulation domain (growth direction: z = [001])
+}<>
+
+
+output{
+#if $AVS format2D = AvsAscii
+#if $ORIGIN format2D = Origin
+   format3D = AvsAscii                               # no Origin format available (default: AvsBinary)
+   section2D{ name = "side"  y = 0 }          # 2D cross section along xz plane (at dot center)
+   section1D{ name = "z" x = 0 y = 0 } # 1D cross section along growth direction (at dot center)
+   section1D{ name = "x" y = 0 z = $HEIGHT_CAPPING/2 } # 1D cross section along x direction (at dot base)
+   
+}<>
+
+
+grid{
+   xgrid{
+      line{ pos = -$W       spacing = 8*$XYGRID}
+      line{ pos = -$WIDTH_SK-1            spacing = $XYGRID}
+      line{ pos = $WIDTH_SK+1             spacing = $XYGRID}
+      line{ pos = $W       spacing = 8*$XYGRID}
+   }
+
+   ygrid{
+      line{ pos = -$W      spacing = 8*$XYGRID}
+      line{ pos = -$WIDTH_SK-1             spacing = $XYGRID}
+      line{ pos = $WIDTH_SK+1             spacing = $XYGRID}
+      line{ pos = $W      spacing = 8*$XYGRID}
+   }
+
+   zgrid{
+      line{ pos = -$W*0.75        spacing = 10*$ZGRID}
+	  line{ pos = -$HEIGHT_AlGaAs-$HEIGHT_GaAs-0.5                  spacing = 2*$ZGRID}
+	  line{ pos = $HEIGHT_InGaAs-1			                   spacing = $QDZGRID}
+        line{ pos = $HEIGHT_InGaAs+$HEIGHT_SK+$HEIGHT_CAPPING+1            spacing = $ZGRID}
+        line{ pos = $HEIGHT_InGaAs+$HEIGHT_SK+$HEIGHT_CAPPING+$HEIGHT_GaAs+$HEIGHT_AlGaAs+0.5  spacing = 2*$ZGRID}
+      line{ pos = $W*1.5 spacing = 10*$ZGRID}
+   }
+
+}<>
+
+database{   # redefine some default material parameters for matching nextnano3 results
+######### indium arsenide #############################################
+binary_zb {
+    name    = InAs
+    valence = III_V    
+                                         
+    piezoelectric_consts{
+       e14 = -0.045                                          
+    }                                                
+   
+    conduction_bands{
+       Gamma{ 
+          mass                  = 0.023                      
+          bandgap               = 0.418                        
+       }
+       L{ 
+          bandgap               = 1.134                       
+       }
+       X{ 
+                bandgap               = 1.434                       
+       }      
+    }
+
+    valence_bands{
+        bandoffset        =-0.04166                           
+        defpot_absolute   = -0.66                             
+         delta_SO          = 0.38                             
+    }
+
+    kp_6_bands{
+       L = -54.15     M = -3.93       N = -55.74            
+    }                    
+ 
+    kp_8_bands{
+        S =  -4.792                                           
+         L = -15.695   M = -3.95   N = -15.895                 
+         kappa = 1.129               
+    }
+}    
+######### GaAs #####################################################
+binary_zb {
+    name    = GaAs
+    valence = III_V    
+   
+    lattice_consts{
+         a           = 5.6532                                   
+    }
+    
+    dielectric_consts{
+         static_a  = 12.93                                     
+    }
+
+    elastic_consts{
+          c11 = 122.1   c12 = 54.8   c44 = 60.4               
+      
+    }                    
+
+    piezoelectric_consts{
+        e14 = -0.159                                          
+    }   
+                                             
+   
+    conduction_bands{
+       Gamma{ 
+          mass                  = 0.0665                        
+          bandgap               = 1.519                       
+          bandgap_alpha         = 0                            
+          bandgap_beta          = 0                         
+
+        defpot_absolute       = -9.3                        
+       }     
+    }
+
+    valence_bands{
+        bandoffset        = -0.11                              
+        defpot_absolute   = -0.7                             
+        defpot_uniaxial_b = -2.0   defpot_uniaxial_d = -5.4  
+        delta_SO          = 0.33                             
+       
+    }
+
+    kp_6_bands{
+        L = -16.25      M =  -3.65      N = -17.4             
+    }                    
+
+    kp_8_bands{                                                
+        S = -2.876                                              
+        E_P = 25.7                                            
+        B =  0                                                
+        L =  1.420   M = -3.65    N =  0.056                  
+    }
+   }  
+######### gallium arsenide antimonide (GaAsSb) ########################
+ternary_zb {
+    name       = "GaAs(1-x)Sb(x)"
+    valence    = III_V
+    binary_x   = GaSb
+    binary_1_x = GaAs
+
+    conduction_bands{
+        Gamma{ bandgap = 1.43 }                                # Vurgaftman1
+        L    { bandgap = 1.2  }                                # Vurgaftman1
+        X    { bandgap = 1.2  }                                # Vurgaftman1
+    }
+
+    valence_bands{
+        bandoffset = 0.2                                 # Vurgaftman1 (Does this value refer to the valence band edge or to the average valence band edge?)
+        delta_SO   =  0.6                                      # Vurgaftman1
+    }
+    
+    mobility_constant{
+        electrons{ mumax = 0 }			                       #  
+        holes	 { mumax =  0 }			                       #  
+    }
+}
+
+}
+
+structure{
+   output_material_index{}
+
+       # GaAs substrate (substrate and top GaAs)
+   region{
+      everywhere{}
+      binary{ name = "GaAs"}
+      contact{ name = "dummy" }
+   }
+
+   # AlGaAs layer 1
+   region{
+      cuboid{ x = [-$W, $W] y = [-$W, $W] z = [-$HEIGHT_GaAs-$HEIGHT_AlGaAs,0] }
+      ternary_constant{ name="Al(x)Ga(1-x)As" alloy_x=0.22 }
+   }  
+
+   # Layer 1 GaAs
+   region{
+      cuboid{ x = [-$W, $W] y = [-$W, $W] z = [-$HEIGHT_GaAs,0] }
+      binary{ name="GaAs" }
+   }
+
+  # BOTTOM well InGaAs capping layer - 0.15
+   region{
+      cuboid{ x = [-$W, $W] y = [-$W, $W] z = [0, $HEIGHT_InGaAs] }
+      ternary_constant{ name="In(x)Ga(1-x)As" alloy_x=$InGaAs_In }
+   }
+
+   # InAs wetting layer
+   region{
+      cuboid{ x = [-$W, $W] y = [-$W, $W] z = [$HEIGHT_InGaAs, $HEIGHT_InGaAs+$WETTING] }
+      binary{ name = "InAs" }
+   }
+
+   # AlGaAs layer 2
+   region{
+      cuboid{ x = [-$W, $W] y = [-$W, $W] z = [$HEIGHT_InGaAs+$WETTING, $HEIGHT_InGaAs+$WETTING+$HEIGHT_CAPPING+$HEIGHT_GaAs+$HEIGHT_AlGaAs] }
+      ternary_constant{ name="Al(x)Ga(1-x)As" alloy_x=0.22 }
+   }
+
+   # aLgAaS capping layer (truncated) Pyramid with {011} side facets
+   region{
+      ternary_constant{ name="Al(x)Ga(1-x)As" alloy_x=0.22 }
+      obelisk{
+         base_x = [-17, 17]
+         base_y = [-17, 17]
+         base_z = [$HEIGHT_InGaAs+$WETTING, $HEIGHT_InGaAs+$WETTING]
+         top_x = [-6.28, 6.28] # truncate to obtain {011} side facets
+         top_y = [-6.28, 6.28] # truncate to obtain {011} side facets
+         top_z = [$HEIGHT_InGaAs+$WETTING+$HEIGHT_CAPPING+$HEIGHT_SK+$HEIGHT_GaAs+$HEIGHT_AlGaAs, $HEIGHT_InGaAs+$WETTING+$HEIGHT_CAPPING+$HEIGHT_SK+$HEIGHT_GaAs+$HEIGHT_AlGaAs]
+      }
+   }
+   
+
+   # Layer 2 GaAs
+   region{
+      cuboid{ x = [-$W, $W] y = [-$W, $W] z = [$HEIGHT_InGaAs+$WETTING, $HEIGHT_InGaAs+$WETTING+$HEIGHT_CAPPING+$HEIGHT_GaAs] }
+      binary{ name="GaAs" }
+   }
+
+   # aLgAaS capping layer (truncated) Pyramid with {011} side facets
+   region{
+      binary{ name="GaAs" }
+      obelisk{
+         base_x = [-15, 15]
+         base_y = [-15, 15]
+         base_z = [$HEIGHT_InGaAs+$WETTING, $HEIGHT_InGaAs+$WETTING]
+         top_x = [-5.88, 5.88] # truncate to obtain {011} side facets
+         top_y = [-5.88, 5.88] # truncate to obtain {011} side facets
+         top_z = [$HEIGHT_InGaAs+$WETTING+$HEIGHT_CAPPING+$HEIGHT_SK+$HEIGHT_GaAs, $HEIGHT_InGaAs+$WETTING+$HEIGHT_CAPPING+$HEIGHT_SK+$HEIGHT_GaAs]
+      }
+   }
+
+  # Top well InGaAs capping layer - 0.15
+   region{
+      cuboid{ x = [-$W, $W] y = [-$W, $W] z = [$HEIGHT_InGaAs+$WETTING, $HEIGHT_InGaAs+$WETTING+$HEIGHT_CAPPING] }
+      ternary_constant{ name="In(x)Ga(1-x)As" alloy_x=$InGaAs_In }
+   }
+
+   # InGaAs capping layer (truncated) Pyramid with {011} side facets
+   region{
+      ternary_constant{ name="In(x)Ga(1-x)As" alloy_x=$InGaAs_In }
+      obelisk{
+         base_x = [-12, 12]
+         base_y = [-12, 12]
+         base_z = [$HEIGHT_InGaAs+$WETTING, $HEIGHT_InGaAs+$WETTING]
+         top_x = [-5.28, 5.28] # truncate to obtain {011} side facets
+         top_y = [-5.28, 5.28] # truncate to obtain {011} side facets
+         top_z = [$HEIGHT_InGaAs+$WETTING+$HEIGHT_CAPPING+$HEIGHT_SK, $HEIGHT_InGaAs+$WETTING+$HEIGHT_CAPPING+$HEIGHT_SK]
+      }
+   }
+   
+   #################### SK structure #############################
+
+   # InAs SK QD
+   region{
+      binary{ name="InAs" }
+      obelisk{
+         base_x = [-$WIDTH_SK/2, $WIDTH_SK/2]
+         base_y = [-$WIDTH_SK/2, $WIDTH_SK/2]
+         base_z = [$HEIGHT_InGaAs+$WETTING, $HEIGHT_InGaAs+$WETTING]
+         top_x = [-4.08, 4.08] # truncate to obtain {011} side facets
+         top_y = [-4.08, 4.08] # truncate to obtain {011} side facets
+         top_z = [$HEIGHT_InGaAs+$WETTING+$HEIGHT_SK, $HEIGHT_InGaAs+$WETTING+$HEIGHT_SK]
+      }
+   }
+
+
+}<>
+
+
+classical{
+   Gamma{}
+   LH{}
+   HH{}
+   SO{}
+
+   output_bandedges{}
+}<>
+
+
+quantum{
+   region{ 
+      name = "dot"
+      x = [-$DIST, $DIST] # i.e. from -3 nm to (5.6 + 3 = 8.6 nm)
+      y = [-$DIST, $DIST] 
+      z = [-10, 16]
+      boundary{ x = dirichlet y = dirichlet z = dirichlet }
+
+#if $ELEC1 Gamma{ num_ev = $NUME } 
+#if $HOLE1 HH{ num_ev = $NUMH }
+#if $KP6   kp_6band{ num_ev = $NUMH }
+#if $KP8   kp_8band{ num_electrons = $NUME num_holes = $NUMH }
+
+      kp_8band{ 
+        num_electrons=6 num_holes=6
+        #lapack {}
+       arpack_inv {}
+#        kp_parameters{
+#           rescale_S_to = 1.0  # in order to avoid spurious solution
+#        }
+      spurious_handling = [ 0.0, 1.0, -1.0, 1.0, 0.0, 1.0 ] # to be consistent with older versions of nextnano++
+
+ #     linear_solver{
+ #                 iterations = 10000
+  #                }
+
+      }  
+
+      output_wavefunctions{  amplitudes = no  probabilities = yes  max_num = $NUME+$NUMH }
+   
+
+   }
+
+
+}<>
+
+
+poisson{
+   output_potential{}
+}<>
+
+
+
+contacts{
+fermi{ name = "dummy" bias = 0.0 } # only needed to define reference energy
+} <>
+
+strain{
+minimized_strain{}
+# pseudomorphic_strain{}
+# polarization_charges = yes
+growth_direction = [0,0,1]
+output_strain_tensor{
+simulation_system = yes
+}
+output_polarization_charges{}
+} <>
+
+optics{
+region {
+name = "dot"
+interband = yes
+intraband = yes
+polarization{
+name = "x"
+re = [1,0,0]
+}
+
+output_transitions = yes
+output_components = yes
+energy_min = 0.5
+energy_max = 2.0
+}
+}
+
+run{
+solve_strain{}
+solve_poisson{}
+solve_quantum{}
+calculate_optics{}
+# outer_iteration{}
+} <>
